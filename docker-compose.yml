@@ -1,0 +1,48 @@
+version: "3"
+services:
+  app:
+    build: ./app
+    links:
+      - db
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  db:
+    # container_name: db
+    # image: mysql
+    # restart: always
+    image: mysql:5.7
+    # container_name: db
+    # command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      # MYSQL_DATABASE: car_part 
+    ports:
+      - "32000:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./data:/var/lib/mysql
+
+# volumes:
+#   mysql_data_test: # กำหนดชื่อ volume ที่ต้องการจะสร้าง
+#     driver: local
+  # db:
+  #     image: mysql:latest
+  #     container_name: db
+  #     command: --default-authentication-plugin=mysql_native_password
+  #     environment:
+  #       MYSQL_ROOT_PASSWORD: root # กำหนด user ของ root mysql
+  #       MYSQL_DATABASE: car_part # กำหนด database เริ่มต้นของ mysql
+  #     ports:
+  #       - "3306:3306"
+  # db:
+  #   image: mysql:5.7
+  #   ports:
+  #     - "32000:3306"
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #   volumes:
+  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #     - ./data:/var/lib/mysql
