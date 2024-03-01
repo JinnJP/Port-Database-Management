@@ -13,6 +13,9 @@ controller.py สำหรับจัดการ string สำหรับ que
 start:
     - docker-compose up -d --build
 
+mysql:
+    - docker exec -it backend-cloud-app-db-1 mysql -u root -p
+
 หมายเหตุ ถ้าจะรัน python หรือติดตั้งต่างๆ ให้รันใน environment only (env)
 เข้า ->  cd backend-cloud-app 
         env\Scripts\activate
