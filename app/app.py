@@ -83,28 +83,25 @@ def select_table():
         cursor.close()
         connection.close()  
 
-# @app.route('/manual_sql', methods=['GET'])
-# def manual_sql():
-#     query_code = request.args.get("query_code")
-#     connection = mysql.connector.connect(**connector())
-#     cursor = connection.cursor()
-#     try:
-#         cursor.execute(f"SELECT * FROM src.{table_name} LIMIT 5;")
-#         data = cursor.fetchall()
-#         formatted_data = [dict(zip([col[0] for col in column_names], row)) for row in data]
-#         if len(formatted_data) != 0:
-#             return formatted_data
-#         else:
-#             return 'Query returned no results.'
-#     except mysql.connector.Error as err:
-#         # Handle the error and return a JSON response
-#         error_message = str(err)
-#         return jsonify({'error': error_message})
-#     finally:
-#         # Close the cursor and connection
-#         cursor.close()
-#         connection.close() 
+@app.route('/manual_sql', methods=['POST'])
+def manual_sql():
+    data = request.json
+    sql_command = data['sql']
+    connection = mysql.connector.connect(**connector())
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(sql_command)
+        result = cursor.fetchall()
+    except mysql.connector.Error as err:
+        # Handle the error and return a JSON response
+        error_message = str(err)
+        return jsonify({'error': error_message})
     
+    cursor.close()
+    connection.close()
+    return result
+
 #!Route for testing
 @app.route('/car_brand')
 def index():
