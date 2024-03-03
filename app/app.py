@@ -159,8 +159,8 @@ def desc_src():
     # return jsonify({'result': result,'column_types': column_types})
     return results
 
-@app.route('/allTable_allColumn', methods=['GET'])
-def allTable_allColumn():
+@app.route('/all_table_column', methods=['GET'])
+def all_table_column():
     host = "db"
     user = "root"
     password = "root"
