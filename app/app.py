@@ -23,24 +23,20 @@ def get_column_types(src_table):
     cursor.close()
     return column_types
 
-@app.route('/create_table', methods=['GET'])
+@app.route('/create_table', methods=['POST'])
 def create_table():
-    src_table = request.args.get("src_table")
-    src_column = request.args.getlist("src_column")
-    dest_table = request.args.get("dest_table")
-    dest_column = request.args.getlist("dest_column")
+    data = request.json
+    src_table = data['sourceTable']
+    src_column = data['sourceColumn']
+    dest_table = data['destTable']
+    dest_column = data['destColumn']
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
-    # print("route create_table")
     column_types = get_column_types(src_table)
     sql_statements = manage_create_query(src_table, src_column, dest_table, dest_column, column_types)
-    # created = create_table(create_query)
-    # print("sql_statements = ",sql_statements)
     try:
         for sql in sql_statements:
             cursor.execute(sql)
-            # print(f"Executed SQL: {sql};")
-        # Commit the changes (if necessary)
         connection.commit()
         return jsonify({'status': 'Table created!', 'query': sql_statements})
     except mysql.connector.Error as err:
@@ -57,16 +53,14 @@ def get_column_names(table_name):
     cursor = connection.cursor()
     query = f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}' AND TABLE_SCHEMA = 'src';"
     cursor.execute(query)
-    # column_types = {column[0]: column[1] for column in cursor.fetchall()}
     column_names = cursor.fetchall()
-    # print("column_names= ",column_names)
-    # ['car_brand_id','car_brand_name']
     cursor.close()
     return column_names
 
-@app.route('/select_table', methods=['GET'])
+@app.route('/select_table', methods=['POST'])
 def select_table():
-    table_name = request.args.get("table_name")
+    data = request.json
+    table_name = data['table']
     column_names = get_column_names(table_name)
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
@@ -86,8 +80,30 @@ def select_table():
         # Close the cursor and connection
         cursor.close()
         connection.close()  
+
+# @app.route('/manual_sql', methods=['GET'])
+# def manual_sql():
+#     query_code = request.args.get("query_code")
+#     connection = mysql.connector.connect(**connector())
+#     cursor = connection.cursor()
+#     try:
+#         cursor.execute(f"SELECT * FROM src.{table_name} LIMIT 5;")
+#         data = cursor.fetchall()
+#         formatted_data = [dict(zip([col[0] for col in column_names], row)) for row in data]
+#         if len(formatted_data) != 0:
+#             return formatted_data
+#         else:
+#             return 'Query returned no results.'
+#     except mysql.connector.Error as err:
+#         # Handle the error and return a JSON response
+#         error_message = str(err)
+#         return jsonify({'error': error_message})
+#     finally:
+#         # Close the cursor and connection
+#         cursor.close()
+#         connection.close() 
     
-#Route for testing
+#!Route for testing
 @app.route('/car_brand')
 def index():
     # config_db = connector_sql()
