@@ -89,7 +89,6 @@ def manual_sql():
     sql_command = data['sql']
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
-
     try:
         cursor.execute(sql_command)
         result = cursor.fetchall()
@@ -160,25 +159,14 @@ def desc_src():
     return results
 
 @app.route('/all_table_column', methods=['GET'])
-def all_table_column():
-    host = "db"
-    user = "root"
-    password = "root"
-    port = "3306"
-    database_src = "src"
-    database_dest = "dest"
-
+def allTable_allColumn():
     data = {"source": [], "dest": []}
 
-    # -- src ---
-    connection = mysql.connector.connect(
-        host=host,
-        user=user,
-        password=password,
-        port=port,
-        database=database_src)
+    connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
-    cursor.execute("SHOW TABLES")
+    # -- src --
+    cursor.execute("USE src")
+    cursor.execute("SHOW TABLES FROM src")
     tables = cursor.fetchall()
     for table in tables:
         table_name = table[0]
@@ -187,18 +175,9 @@ def all_table_column():
 
         table_data = {"name": table_name, "columns": [column[0] for column in columns]}
         data["source"].append(table_data)
-    cursor.close()
-    connection.close()
-
-    # -- dest ---
-    connection = mysql.connector.connect(
-        host=host,
-        user=user,
-        password=password,
-        port=port,
-        database=database_dest)
-    cursor = connection.cursor()
-    cursor.execute("SHOW TABLES")
+    # -- dest --
+    cursor.execute("USE dest")
+    cursor.execute("SHOW TABLES FROM dest")
     tables = cursor.fetchall()
     for table in tables:
         table_name = table[0]
