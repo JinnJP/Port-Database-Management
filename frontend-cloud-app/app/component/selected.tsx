@@ -3,10 +3,10 @@
 import { TableNode, useTreeNodeStore } from '@/lib/store';
 import { postData } from '@/lib/getApi';
 
+import { useEffect, useState } from 'react';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { MultiSelect } from 'primereact/multiselect';
-import { useEffect, useState } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
@@ -14,10 +14,18 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 
 export default function Selected({ }) {
+    type Title = 'Failed!' | 'Error!' | 'Success!'
+    type Color = 'red' | 'red' | 'green'
+
+    const colorAlert: Record<Title, Color> = {
+        'Failed!': 'red',
+        'Error!': 'red',
+        'Success!': 'green'
+    };
     const dataTreeNode = useTreeNodeStore();
 
     const [visible, setVisible] = useState<boolean>(false);
-    const [textDialog, setTextDialog] = useState<string>('');
+    const [textDialog, setTextDialog] = useState<{ title: Title, text: string }>({ title: 'Success!', text: 'test' });
     // title new table
     const [newTableName, setNewTableName] = useState<string>('');
     // edit column table
@@ -30,14 +38,17 @@ export default function Selected({ }) {
     const [nodeTablesSource, setNodeTablesSource] = useState<TableNode[]>();
     // option table
     const [tablesOption, setTablesOption] = useState<string[]>(['']);
-    const [selectedTables, setSelectedTables] = useState<string>();
+    const [selectedTables, setSelectedTables] = useState<string | undefined>();
 
-    const [columnsOption, setColumnsOption] = useState<string[]>();
+    const [columnsOption, setColumnsOption] = useState<string[]>(['']);
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
 
     const [dataTable, setDataTable] = useState<any[]>([]);
 
     useEffect(() => {
+        if (dataTreeNode.dataTree.source.length === 0) {
+            dataTreeNode.fetchTreeNode();
+        }
         // get data from store
         const dataTree = dataTreeNode.dataTree
         // set table source to use in create
@@ -55,7 +66,6 @@ export default function Selected({ }) {
     }
 
     const setColumnByTable = (selectedTable: string) => {
-        console.log(selectedTable)
         // set table that selected
         setSelectedTables(selectedTable)
         setNewTableName(selectedTable)
@@ -76,7 +86,6 @@ export default function Selected({ }) {
         for (let index = 0; index < dataSource?.length; index++) {
             if (selectTable === dataSource[index].name) {
                 // find selected table in data source
-                console.log(dataSource[index].columns)
                 columnList = columnList.concat(dataSource[index].columns)
             }
         };
@@ -93,7 +102,7 @@ export default function Selected({ }) {
     const createTable = async (sourceTableName: string | undefined, selectedColumnsName: string[] | undefined, destTableName: string, columnsName: string[]) => {
         // check input
         if (!sourceTableName || !destTableName || !selectedColumnsName || selectedColumnsName.length === 0) {
-            setTextDialog('Check your input or selected!')
+            setTextDialog({ title: 'Failed!', text: 'Please, Check your input or selected!' })
             return setVisible(true)
         }
 
@@ -107,7 +116,13 @@ export default function Selected({ }) {
 
         try {
             const data = await postData(path, params);
-            setTextDialog(data.status || data);
+            if (data.status) {
+                setTextDialog({ title: 'Success!', text: data.status });
+                // update dest in side bar
+                dataTreeNode.updateDestNode(destTableName, columnsName);
+            } else {
+                setTextDialog({ title: 'Failed!', text: data.error });
+            }
             return setVisible(true)
         } catch (error: any) {
             console.error('Error:', error.message);
@@ -115,21 +130,22 @@ export default function Selected({ }) {
     }
 
     const loadTable = async (tableName: string | undefined) => {
+        if (!tableName) {
+            return
+        }
         // fetch api load table
         const path = 'select_table';
         const params = {
             table: tableName
         };
+
         try {
             const data = await postData(path, params);
-            if (data) {
-                setDataTable(data)
-            } else {
-                setDataTable([])
-            }
-            console.log("data", data)
+            setDataTable(data)
         } catch (error: any) {
+            // if error or no data
             console.error('Error:', error.message);
+            setDataTable([])
         }
     };
 
@@ -142,9 +158,9 @@ export default function Selected({ }) {
 
     return (
         <div>
-            <Dialog header='Warning' visible={visible} style={{ width: 'fit-content' }} onHide={() => setVisible(false)}>
+            <Dialog header={textDialog?.title} visible={visible} headerStyle={{ color: `${colorAlert[textDialog?.title]}` }} style={{ width: 'fit-content' }} onHide={() => setVisible(false)}>
                 <p className="m-0 px-5">
-                    {textDialog}
+                    {textDialog?.text}
                 </p>
             </Dialog>
             <Card>
@@ -168,7 +184,7 @@ export default function Selected({ }) {
                     <label className="flex items-center font-semibold mr-5">Table name:</label>
                     <InputText value={newTableName} onChange={(e) => setNewTableName(e.target.value)} />
                 </div>
-                {/* <label>Number of Records: {dataTable.length}</label> */}
+                <label className="text-slate-500 text-sm">*Example data limit 5 record</label>
                 <DataTable value={dataTable} showGridlines scrollable scrollHeight="400px" size='small' tableStyle={{ minWidth: '100%' }}>
                     {selectedColumns?.map((column: any, index: number) => {
                         return <Column key={index} field={column} header={
@@ -189,7 +205,10 @@ export default function Selected({ }) {
                         <Button label="Save" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200" onClick={handleChangeColumnName} />
                     </div>
                 </Dialog>
-                <Button className="mt-4" label="Create Table" onClick={() => createTable(selectedTables, selectedColumns, newTableName, newTableColumns)} />
+                <div className='flex flex-col'>
+                    <label className="text-slate-500 text-sm">Create table to destination database</label>
+                    <Button className="mt-4" label="Create Table" onClick={() => createTable(selectedTables, selectedColumns, newTableName, newTableColumns)} />
+                </div>
             </div>
         </div>
     );

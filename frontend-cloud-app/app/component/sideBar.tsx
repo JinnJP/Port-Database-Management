@@ -14,7 +14,6 @@ export default function TreeComponent({ }) {
         if (dataTreeNode.dataTree.source.length === 0) {
             dataTreeNode.fetchTreeNode();
         }
-
         // dataTree after fetch
         initTreeNode(dataTreeNode.dataTree);
     }, [dataTreeNode]);

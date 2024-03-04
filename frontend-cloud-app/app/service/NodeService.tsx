@@ -1,13 +1,14 @@
-export const NodeService = {
-    getTreeNodesDatacolum(dataTree: any) {
-        const treeNodes = [];
+import { DataTree, TableNode } from "@/lib/store";
 
+export const NodeService = {
+    getTreeNodesDatacolum(dataTree: DataTree) {
+        const treeNodes = [];
         // เพิ่มโหนดสำหรับ source
         treeNodes.push({
             key: 'source',
             label: 'Src',
             icon: 'pi pi-database',
-            children: dataTree.source.flatMap((item: { name: any; columns: any[]; }, index: any) => [
+            children: dataTree.source.flatMap((item: TableNode, index: number) => [
                 {
                     key: `source-${index}`,
                     label: item.name,
@@ -21,13 +22,12 @@ export const NodeService = {
                 }
             ])
         });
-
         // เพิ่มโหนดสำหรับ destination
         treeNodes.push({
             key: 'destination',
             label: 'Dest',
             icon: 'pi pi-database',
-            children: dataTree.dest.flatMap((item: { name: any; columns: any[]; }, index: any) => [
+            children: dataTree.dest.flatMap((item: TableNode, index: number) => [
                 {
                     key: `destination-${index}`,
                     label: item.name,
@@ -45,7 +45,7 @@ export const NodeService = {
         return treeNodes;
     },
 
-    getTreeNodes(dataTree: any) {
+    getTreeNodes(dataTree: DataTree) {
         return Promise.resolve(this.getTreeNodesDatacolum(dataTree));
     }
 };
