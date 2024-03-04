@@ -101,7 +101,9 @@ def manual_sql():
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
     try:
-        cursor.execute(sql_command)
+        sql_command_split = sql_command.split(";\n")
+        for command in sql_command_split:
+            cursor.execute(command)
         result = cursor.fetchall()
     except mysql.connector.Error as err:
         # Handle the error and return a JSON response
