@@ -19,11 +19,22 @@ def connector():
 def get_column_types(src_table):
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
-    query = f"DESCRIBE src.{src_table};"
+    query = f"""
+    SELECT
+        COLUMN_NAME,
+        COLUMN_TYPE,
+        COLUMN_KEY
+    FROM
+        INFORMATION_SCHEMA.COLUMNS
+    WHERE
+        TABLE_SCHEMA = 'src' AND TABLE_NAME = '{src_table}';"""
     cursor.execute(query)
-    column_types = {column[0]: column[1] for column in cursor.fetchall()}
+    data = cursor.fetchall()
+    column_types = {column[0]: column[1] for column in data}
+    column_keys = {column[0]: 'PRIMARY KEY' if column[2] == 'PRI' else 'UNIQUE' if column[2] == 'UNI' else '' for column in data}
     cursor.close()
-    return column_types
+    return column_types, column_keys
+
 
 @app.route('/create_table', methods=['POST'])
 def create_table():
@@ -34,13 +45,13 @@ def create_table():
     dest_column = data['destColumn']
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
-    column_types = get_column_types(src_table)
-    sql_statements = manage_create_query(src_table, src_column, dest_table, dest_column, column_types)
+    column_types, column_keys = get_column_types(src_table)
+    final_query = manage_create_query(src_table, src_column, dest_table, dest_column, column_types, column_keys)
     try:
-        for sql in sql_statements:
+        for sql in final_query:
             cursor.execute(sql)
         connection.commit()
-        return jsonify({'status': 'Table created!', 'query': sql_statements})
+        return jsonify({'status': 'Table created!', 'query': final_query})
     except mysql.connector.Error as err:
         # Handle the error and return a JSON response
         error_message = str(err)
@@ -48,7 +59,7 @@ def create_table():
     finally:
         # Close the cursor and connection
         cursor.close()
-        connection.close()  
+        connection.close()
 
 def get_column_names(table_name):
     connection = mysql.connector.connect(**connector())
@@ -100,63 +111,6 @@ def manual_sql():
     cursor.close()
     connection.close()
     return result
-
-#!Route for testing
-@app.route('/car_brand')
-def index():
-    # config_db = connector_sql()
-    connection = mysql.connector.connect(**connector())
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM src.car_brand')
-    results = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return results
-
-@app.route('/select_dest')
-def select_dest():
-    # connection_config = connector()
-    connection = mysql.connector.connect(**connector())
-    cursor = connection.cursor()
-    try:
-        # Create a cursor object to execute queries
-        # Your SELECT query
-        query = "SELECT * FROM dest.car_brand;"
-        # Execute the query
-        cursor.execute(query)
-        # Fetch all rows
-        result = cursor.fetchall()
-        print(result)
-        return result
-    finally:
-        # Close the cursor and connection
-        cursor.close()
-        connection.close()
-
-@app.route('/desc_dest')
-def desc_dest():
-    dest_table = request.args.get("dest_table")
-    connection = mysql.connector.connect(**connector())
-    cursor = connection.cursor()
-    query = f"DESCRIBE dest.{dest_table};"
-    cursor.execute(query)
-    column_types = {column[0]: column[1] for column in cursor.fetchall()}
-    # result = cursor.fetchall()
-    cursor.close()
-    return column_types
-
-@app.route('/desc_src', methods=['GET'])
-def desc_src():
-    src_table = request.args.get("src_table")
-    connection = mysql.connector.connect(**connector())
-    cursor = connection.cursor()
-    query = f"DESCRIBE src.{src_table};"
-    cursor.execute(query)
-    # column_types = {column[0]: column[1] for column in cursor.fetchall()}
-    results = cursor.fetchall()
-    cursor.close()
-    # return jsonify({'result': result,'column_types': column_types})
-    return results
 
 @app.route('/all_table_column', methods=['GET'])
 def allTable_allColumn():
