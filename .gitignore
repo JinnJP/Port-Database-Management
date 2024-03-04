@@ -1,1 +1,37 @@
 data/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+frontend-cloud-app/node_modules
+frontend-cloud-app/.pnp
+frontend-cloud-app/.pnp.js
+frontend-cloud-app/.yarn/install-state.gz
+
+# testing
+frontend-cloud-app/coverage
+
+# next.js
+frontend-cloud-app/.next/
+frontend-cloud-app/out/
+
+# production
+frontend-cloud-app/build
+
+# misc
+frontend-cloud-app/.DS_Store
+frontend-cloud-app/*.pem
+
+# debug
+frontend-cloud-app/npm-debug.log*
+frontend-cloud-app/yarn-debug.log*
+frontend-cloud-app/yarn-error.log*
+
+# local env files
+frontend-cloud-app/.env*.local
+
+# vercel
+frontend-cloud-app/.vercel
+
+# typescript
+frontend-cloud-app/*.tsbuildinfo
+frontend-cloud-app/next-env.d.ts
