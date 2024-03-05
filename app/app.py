@@ -61,10 +61,10 @@ def create_table():
         cursor.close()
         connection.close()
 
-def get_column_names(table_name):
+def get_column_names(table_name, database):
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
-    query = f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}' AND TABLE_SCHEMA = 'src';"
+    query = f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}' AND TABLE_SCHEMA = '{database}';"
     cursor.execute(query)
     column_names = cursor.fetchall()
     cursor.close()
@@ -73,12 +73,14 @@ def get_column_names(table_name):
 @app.route('/select_table', methods=['POST'])
 def select_table():
     data = request.json
+    database = data['database']
     table_name = data['table']
-    column_names = get_column_names(table_name)
+    limit_row = data['limitRow']
+    column_names = get_column_names(table_name, database)
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
     try:
-        cursor.execute(f"SELECT * FROM src.{table_name} LIMIT 5;")
+        cursor.execute(f"SELECT * FROM {database}.{table_name} LIMIT {limit_row};")
         data = cursor.fetchall()
         formatted_data = [dict(zip([col[0] for col in column_names], row)) for row in data]
         if len(formatted_data) != 0:
@@ -116,7 +118,7 @@ def manual_sql():
 
 @app.route('/all_table_column', methods=['GET'])
 def allTable_allColumn():
-    data = {"source": [], "dest": []}
+    data = {"src": [], "dest": []}
 
     connection = mysql.connector.connect(**connector())
     cursor = connection.cursor()
@@ -130,7 +132,7 @@ def allTable_allColumn():
         columns = cursor.fetchall()
 
         table_data = {"name": table_name, "columns": [column[0] for column in columns]}
-        data["source"].append(table_data)
+        data["src"].append(table_data)
     # -- dest --
     cursor.execute("USE dest")
     cursor.execute("SHOW TABLES FROM dest")
