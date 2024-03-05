@@ -3,7 +3,7 @@ import { getData } from './getApi'
 
 
 export interface DataTree {
-    source: TableNode[],
+    src: TableNode[],
     dest: TableNode[]
 };
 
@@ -19,7 +19,7 @@ interface TreeNodeStore {
 };
 
 export const useTreeNodeStore = create<TreeNodeStore>((set) => ({
-    dataTree: { source: [], dest: [] },
+    dataTree: { src: [], dest: [] },
     updateDestNode: (newTable: string, columnsList: string[]) =>
         set((state) => ({
             dataTree: {

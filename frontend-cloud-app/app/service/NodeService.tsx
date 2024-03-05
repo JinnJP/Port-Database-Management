@@ -8,7 +8,7 @@ export const NodeService = {
             key: 'source',
             label: 'Src',
             icon: 'pi pi-database',
-            children: dataTree.source.flatMap((item: TableNode, index: number) => [
+            children: dataTree.src.flatMap((item: TableNode, index: number) => [
                 {
                     key: `source-${index}`,
                     label: item.name,

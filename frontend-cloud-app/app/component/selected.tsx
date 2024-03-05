@@ -1,6 +1,6 @@
 'use client'
 
-import { TableNode, useTreeNodeStore } from '@/lib/store';
+import { DataTree, TableNode, useTreeNodeStore } from '@/lib/store';
 import { postData } from '@/lib/getApi';
 
 import { useEffect, useState } from 'react';
@@ -12,10 +12,12 @@ import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
+import { TreeNode } from 'primereact/treenode';
 
 export default function Selected({ }) {
     type Title = 'Failed!' | 'Error!' | 'Success!'
     type Color = 'red' | 'red' | 'green'
+    type Database = 'src' | 'dest'
 
     const colorAlert: Record<Title, Color> = {
         'Failed!': 'red',
@@ -23,6 +25,10 @@ export default function Selected({ }) {
         'Success!': 'green'
     };
     const dataTreeNode = useTreeNodeStore();
+    const databaseOption: Database[] = ['src', 'dest'];
+    const [database, setDatabase] = useState<Database>();
+    // data table
+    const [nodeTablesColumns, setNodeTablesColumns] = useState<DataTree>();
 
     const [visible, setVisible] = useState<boolean>(false);
     const [textDialog, setTextDialog] = useState<{ title: Title, text: string }>({ title: 'Success!', text: 'test' });
@@ -34,8 +40,6 @@ export default function Selected({ }) {
     const [editIndex, setEditIndex] = useState(-1);
     const [newTableColumns, setNewTableColumns] = useState<string[]>([]);
 
-    // data table
-    const [nodeTablesSource, setNodeTablesSource] = useState<TableNode[]>();
     // option table
     const [tablesOption, setTablesOption] = useState<string[]>(['']);
     const [selectedTables, setSelectedTables] = useState<string | undefined>();
@@ -46,16 +50,25 @@ export default function Selected({ }) {
     const [dataTable, setDataTable] = useState<any[]>([]);
 
     useEffect(() => {
-        if (dataTreeNode.dataTree.source.length === 0) {
+        if (dataTreeNode.dataTree.src.length === 0) {
             dataTreeNode.fetchTreeNode();
         }
         // get data from store
         const dataTree = dataTreeNode.dataTree
         // set table source to use in create
-        setNodeTablesSource(dataTree.source)
-
-        setAllTableSource(dataTree.source)
+        setNodeTablesColumns(dataTree)
     }, [dataTreeNode]);
+
+    const setTableByDatabase = (selectedDatabase: Database) => {
+        // clear all when start select
+        setSelectedTables(undefined)
+        setDataTable([])
+        setSelectedColumns([])
+        // start select
+        setDatabase(selectedDatabase)
+        const dataTree = nodeTablesColumns?.[selectedDatabase]
+        setAllTableSource(dataTree || [])
+    }
 
     const setAllTableSource = (dataSource: TableNode[]) => {
         // set table list to select
@@ -70,7 +83,7 @@ export default function Selected({ }) {
         setSelectedTables(selectedTable)
         setNewTableName(selectedTable)
         // set column
-        const columnList = getColumnByselectedTable(nodeTablesSource || [], selectedTable)
+        const columnList = getColumnByselectedTable(nodeTablesColumns, database, selectedTable)
         // set option column
         setColumnsOption(columnList)
         // set column selected default is all
@@ -81,12 +94,16 @@ export default function Selected({ }) {
         loadTable(selectedTable)
     }
 
-    const getColumnByselectedTable = (dataSource: TableNode[], selectTable: string) => {
+    const getColumnByselectedTable = (dataTree: DataTree | undefined, database: Database | undefined, selectTable: string) => {
+        if (!database) {
+            return []
+        }
+        const data = dataTree ? dataTree[database] : []
         let columnList: string[] = []
-        for (let index = 0; index < dataSource?.length; index++) {
-            if (selectTable === dataSource[index].name) {
+        for (let index = 0; index < data?.length; index++) {
+            if (selectTable === data[index].name) {
                 // find selected table in data source
-                columnList = columnList.concat(dataSource[index].columns)
+                columnList = columnList.concat(data[index].columns)
             }
         };
         return columnList
@@ -136,7 +153,9 @@ export default function Selected({ }) {
         // fetch api load table
         const path = 'select_table';
         const params = {
-            table: tableName
+            database: database,
+            table: tableName,
+            limitRow: 5
         };
 
         try {
@@ -166,6 +185,13 @@ export default function Selected({ }) {
             <Card>
                 <div className="grid grid-cols-2 gap-3">
                     <div>
+                        <label className="flex items-center font-semibold">Select database</label>
+                        <Dropdown showClear value={database} onChange={(e) => setTableByDatabase(e.value)}
+                            options={databaseOption} placeholder="Select Table"
+                            className='w-[200px] min-w-fit my-3' />
+                    </div>
+                    <br />
+                    <div>
                         <label className="flex items-center font-semibold">Source Table</label>
                         <Dropdown showClear value={selectedTables} filter onChange={(e) => setColumnByTable(e.value)}
                             options={tablesOption} placeholder="Select Table"
@@ -180,12 +206,18 @@ export default function Selected({ }) {
                 </div>
             </Card>
             <div className="grid gap-4 w-full h-fit mt-10">
-                <div className='flex flex-row'>
+                <div className={`flex flex-row ${database === 'dest' ? 'hidden' : ''}`}>
                     <label className="flex items-center font-semibold mr-5">Table name:</label>
                     <InputText value={newTableName} onChange={(e) => setNewTableName(e.target.value)} />
                 </div>
                 <label className="text-slate-500 text-sm">*Example data limit 5 record</label>
-                <DataTable value={dataTable} showGridlines scrollable scrollHeight="400px" size='small' tableStyle={{ minWidth: '100%' }}>
+                <DataTable
+                    value={dataTable}
+                    showGridlines
+                    scrollable
+                    scrollHeight="400px"
+                    size='small'
+                    tableStyle={{ minWidth: '100%' }}>
                     {selectedColumns?.map((column: any, index: number) => {
                         return <Column key={index} field={column} header={
                             <div>
@@ -205,7 +237,7 @@ export default function Selected({ }) {
                         <Button label="Save" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200" onClick={handleChangeColumnName} />
                     </div>
                 </Dialog>
-                <div className='flex flex-col'>
+                <div className={`flex flex-col ${database === 'dest' ? 'hidden' : ''}`}>
                     <label className="text-slate-500 text-sm">Create table to destination database</label>
                     <Button className="mt-4" label="Create Table" onClick={() => createTable(selectedTables, selectedColumns, newTableName, newTableColumns)} />
                 </div>

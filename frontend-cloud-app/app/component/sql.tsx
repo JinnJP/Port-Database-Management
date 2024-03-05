@@ -42,7 +42,7 @@ export default function Sql() {
             </div>
             <label className="text-slate-500 text-sm">Output :</label>
             <div className="card flex justify-content-center">
-                <div className="border-[1px] rounded border-[#d1d5db] min-h-fit h-40 max-w-[1040px] p-4 overflow-auto">{outputData}</div>
+                <div className="border-[1px] rounded border-[#d1d5db] min-h-fit h-40 w-[1040px] p-4 overflow-auto">{outputData}</div>
             </div>
         </div>
     );

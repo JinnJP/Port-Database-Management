@@ -11,7 +11,7 @@ export default function TreeComponent({ }) {
     const dataTreeNode = useTreeNodeStore();
 
     useEffect(() => {
-        if (dataTreeNode.dataTree.source.length === 0) {
+        if (dataTreeNode.dataTree.src.length === 0) {
             dataTreeNode.fetchTreeNode();
         }
         // dataTree after fetch
