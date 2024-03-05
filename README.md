@@ -1,22 +1,67 @@
-# backend-cloud-app
-app.py สำหรับสร้าง route
-controller.py สำหรับจัดการ string สำหรับ query หรืออื่นๆ
+# Port Database Management
+This Project for EN814710 Cloud Application and Networking. 
+## Installation and use steps
 
-เราจะใช้ Dockerfile อันเดิมที่เราสร้าง
-เราจะเปลี่ยนจาก docker run เปลี่ยนเป็นการ run จาก docker-compose.yml
-เราจะ start service ด้วย (bulid และ run docker image)
-    - docker-compose up -d --build
-    - docker-compose down
-    // only build
-    - docker-compose build
-start:
-    - docker-compose up -d --build
+#### Linux:
+```bash
+# update Ubuntu
+$ sudo apt update
+$ sudo apt upgrade
 
-mysql:
-    - docker exec -it backend-cloud-app-db-1 mysql -u root -p
-docker environment:
-    - docker-compose logs -f -t
-หมายเหตุ ถ้าจะรัน python หรือติดตั้งต่างๆ ให้รันใน environment only (env)
-เข้า ->  cd backend-cloud-app 
-        env\Scripts\activate
-ออก ->  deactivate
+# install Docker
+$ sudo apt install docker.io
+# check verion install
+$ docker --version
+
+# install Docker-Compose
+$ sudo curl -L “http://github.com/docker/compose/releases/dowload/1.25.5/docker-compose-$(uname -s)-$(uname -m)” -o /usr/local/bin/docker-compose
+$ sudo chmod +x /usr/local/bin/docker-compose
+# check verion install
+$ docker-compose --version
+```
+
+#### Run with Docker Compose
+```bash
+# get code
+$ git clone https://github.com/JinnJP/Port-Database-Management.git
+
+# go to directory Port-Database-Management
+$ cd Port-Database-Management 
+
+# docker Compose up
+$ docker-compose up -d --build	
+
+# check status
+$ docker-compose ps
+
+# docker Compose down
+$ docker-compose down
+```
+
+Runs the app in the development mode.
+Open http://localhost:3000 to view it in the browser.
+
+## Help
+
+#### Docker environment:
+```bash
+$ docker-compose logs -f -t
+```
+
+#### mysql:
+
+``` bash
+$ docker exec -it port-database-management-db-1 mysql -u root -p
+```
+#### Enviroment development:
+_**หมายเหตุ** ถ้าจะรัน python หรือติดตั้งต่าง ๆ ให้รันใน environment only [env](/env/)._
+
+เข้า:  
+```bash
+$ cd backend-cloud-app
+$ env\Scripts\activate
+```
+ออก: 
+```bash
+$ deactivate
+```

@@ -14,7 +14,7 @@ services:
       - db
 
   db:
-    # platform: linux/x86_64
+    # platform: linux/x86_64 # for mac m1
     image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: root
