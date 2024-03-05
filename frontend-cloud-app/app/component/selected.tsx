@@ -220,13 +220,15 @@ export default function Selected({ }) {
                     tableStyle={{ minWidth: '100%' }}>
                     {selectedColumns?.map((column: any, index: number) => {
                         return <Column key={index} field={column} header={
-                            <div>
+                            <div className='flex flex-row'>
                                 {newTableColumns[index]}
-                                <i className="pi pi-pencil ml-2 cursor-pointer" onClick={() => {
-                                    setShowEditModal(true);
-                                    setEditIndex(index);
-                                    setNewColumn(column);
-                                }}></i>
+                                <div className={`${database === 'dest' ? 'hidden' : ''}`}>
+                                    <i className="pi pi-pencil ml-2 cursor-pointer" onClick={() => {
+                                        setShowEditModal(true);
+                                        setEditIndex(index);
+                                        setNewColumn(column);
+                                    }}></i>
+                                </div>
                             </div>
                         }></Column>
                     })}
